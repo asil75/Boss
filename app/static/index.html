@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Botim Mini App</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Botim Delivery</p>
+        <h1 id="title">Mini App</h1>
+      </div>
+      <button id="themeBtn" class="ghost">Тема</button>
+    </header>
+
+    <section id="roleBox" class="card hidden">
+      <h2>Роль танланг</h2>
+      <div class="actions">
+        <button data-role="shop">🏪 Магазин</button>
+        <button data-role="courier">🛵 Курьер</button>
+      </div>
+    </section>
+
+    <section id="phoneBox" class="card hidden">
+      <h2>Телефон</h2>
+      <input id="phoneInput" placeholder="+998 __ ___ __ __" />
+      <button id="savePhone">Сақлаш</button>
+    </section>
+
+    <nav id="tabs" class="tabs hidden">
+      <button class="active" data-tab="orders">Заказлар</button>
+      <button data-tab="unpaid">Тўловлар</button>
+      <button data-tab="stats">Статистика</button>
+      <button data-tab="admin" class="ownerOnly">Админ</button>
+    </nav>
+
+    <section id="orders" class="tab active">
+      <div class="toolbar">
+        <select id="orderFilter">
+          <option value="">Барчаси</option>
+          <option value="new">Янги</option>
+          <option value="taken">Олинган</option>
+          <option value="at_shop">Дўконда</option>
+          <option value="on_delivery">Йўлда</option>
+          <option value="at_client">Клиентда</option>
+          <option value="delivered">Етказилди</option>
+          <option value="failed_delivery">Мувваффақиятсиз</option>
+          <option value="__unpaid">Тўланмаган</option>
+          <option value="__completed">Тугалланган</option>
+        </select>
+        <button id="refreshOrders">Янгилаш</button>
+      </div>
+
+      <form id="orderForm" class="card hidden">
+        <h2>Янги заказ</h2>
+        <input name="from_address" placeholder="Қаердан" required />
+        <input name="shop_contact" placeholder="Магазин алоқа" required />
+        <input name="to_address" placeholder="Қаерга" required />
+        <input name="to_apt" placeholder="Квартира/подъезд" />
+        <input name="client_name" placeholder="Клиент исми" required />
+        <input name="client_phone" placeholder="Клиент телефони" required />
+        <input name="price" type="number" step="0.01" placeholder="Нарх" required />
+        <button type="submit">Заказ яратиш</button>
+      </form>
+
+      <div id="ordersList" class="cards"></div>
+    </section>
+
+    <section id="unpaid" class="tab">
+      <button id="payAll" class="shopOnly">Ҳаммасини тўланган деб белгилаш</button>
+      <pre id="paymentSummary" class="summary"></pre>
+    </section>
+
+    <section id="stats" class="tab">
+      <pre id="statsBox" class="summary"></pre>
+    </section>
+
+    <section id="admin" class="tab">
+      <h2>Фойдаланувчилар</h2>
+      <div id="usersList" class="cards"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

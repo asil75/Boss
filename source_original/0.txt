@@ -1,0 +1,110 @@
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes, MessageHandler, CallbackQueryHandler, filters
+import aiosqlite
+import logging
+from config import DB_PATH, is_owner
+
+logger = logging.getLogger(__name__)
+
+# Количество пользователей на одной странице
+USERS_PER_PAGE = 5
+
+async def admin_users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Вызов списка пользователей через текстовую кнопку."""
+    if not is_owner(update.effective_user.id):
+        return
+    await send_users_list(update, context, page=0)
+
+async def send_users_list(update: Update, context: ContextTypes.DEFAULT_TYPE, page: int):
+    """Функция отрисовки списка пользователей с пагинацией."""
+    offset = page * USERS_PER_PAGE
+    
+    async with aiosqlite.connect(DB_PATH) as db:
+        # Считаем общее количество
+        async with db.execute("SELECT COUNT(*) FROM users") as c:
+            total_users = (await c.fetchone())[0]
+        
+        # Берем срез
+        async with db.execute(
+            "SELECT tg_id, role, phone, is_blocked FROM users ORDER BY id DESC LIMIT ? OFFSET ?",
+            (USERS_PER_PAGE, offset)
+        ) as cursor:
+            rows = await cursor.fetchall()
+
+    if not rows:
+        text = "👥 Пользователей пока нет."
+        kb = []
+    else:
+        text = f"👥 <b>Управление пользователями</b> (Стр. {page + 1})\n\n"
+        kb = []
+        for tg_id, role, phone, is_blocked in rows:
+            status_icon = "⛔" if is_blocked else "✅"
+            role_name = role or "Не выбрана"
+            text += f"{status_icon} <code>{tg_id}</code> | {role_name} | {phone or '—'}\n"
+            
+            # Кнопка действия для каждого пользователя
+            action_text = "Разблокировать" if is_blocked else "Заблокировать"
+            kb.append([InlineKeyboardButton(f"{status_icon} {action_text} {tg_id}", callback_data=f"us_block:{tg_id}:{page}")])
+
+    # Кнопки навигации
+    nav_buttons = []
+    if page > 0:
+        nav_buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"us_page:{page-1}"))
+    if offset + USERS_PER_PAGE < total_users:
+        nav_buttons.append(InlineKeyboardButton("Вперед ➡️", callback_data=f"us_page:{page+1}"))
+    
+    if nav_buttons:
+        kb.append(nav_buttons)
+
+    # Если это вызов по кнопке (новое сообщение)
+    if update.message:
+        await update.message.reply_html(text, reply_markup=InlineKeyboardMarkup(kb))
+    # Если это переключение страницы (редактирование)
+    elif update.callback_query:
+        await update.callback_query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(kb), parse_mode="HTML")
+
+async def toggle_block_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка нажатия на кнопку блокировки."""
+    query = update.callback_query
+    if not is_owner(query.from_user.id):
+        await query.answer("У вас нет прав.", show_alert=True)
+        return
+
+    # Данные: us_block:TG_ID:PAGE
+    parts = query.data.split(":")
+    target_id = int(parts[1])
+    current_page = int(parts[2])
+
+    async with aiosqlite.connect(DB_PATH) as db:
+        async with db.execute("SELECT is_blocked FROM users WHERE tg_id=?", (target_id,)) as c:
+            row = await c.fetchone()
+            if not row:
+                await query.answer("Пользователь не найден.")
+                return
+            
+            new_status = 0 if row[0] else 1
+            await db.execute("UPDATE users SET is_blocked=? WHERE tg_id=?", (new_status, target_id))
+            await db.commit()
+
+    await query.answer(f"Статус пользователя {target_id} изменен.")
+    # Обновляем текущую страницу
+    await send_users_list(update, context, page=current_page)
+
+async def page_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка кнопок навигации."""
+    query = update.callback_query
+    page = int(query.data.split(":")[1])
+    await send_users_list(update, context, page=page)
+    await query.answer()
+
+def register(app):
+    """Регистрация обработчиков плагина."""
+    # Обработка текстовой команды
+    app.add_handler(MessageHandler(filters.Regex("^👥 Пользователи$"), admin_users_command))
+    
+    # Обработка пагинации
+    app.add_handler(CallbackQueryHandler(page_callback, pattern="^us_page:"))
+    
+    # Обработка блокировки
+    app.add_handler(CallbackQueryHandler(toggle_block_callback, pattern="^us_block:"))
+

@@ -1,0 +1,48 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #172033;
+  --muted: #667085;
+  --primary: #2563eb;
+  --danger: #dc2626;
+  --ok: #16a34a;
+  --border: #e5e7eb;
+}
+body.dark {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --border: #334155;
+}
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.app { max-width: 720px; margin: 0 auto; padding: 16px; }
+.hero { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 16px; }
+.eyebrow { margin: 0; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+h1, h2 { margin: 0 0 12px; }
+.card, .tab, .order-card, .user-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 8px 24px rgba(15, 23, 42, .06); }
+button, input, select { font: inherit; border-radius: 12px; border: 1px solid var(--border); padding: 12px; background: var(--card); color: var(--text); }
+button { cursor: pointer; background: var(--primary); color: white; border: 0; font-weight: 700; }
+button.ghost { background: transparent; color: var(--primary); border: 1px solid var(--border); }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.tab { display: none; }
+.tab.active { display: block; }
+.toolbar { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 12px; }
+input, select { width: 100%; box-sizing: border-box; }
+form input { margin-bottom: 10px; }
+.hidden { display: none !important; }
+.summary { white-space: pre-wrap; background: transparent; border: 0; padding: 0; color: var(--text); }
+.order-card strong { display: block; margin-bottom: 8px; }
+.meta { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.order-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.order-actions button { background: #334155; }
+.ownerOnly, .shopOnly { background: #7c3aed; }
+.danger { background: var(--danger); }
+.ok { background: var(--ok); }
